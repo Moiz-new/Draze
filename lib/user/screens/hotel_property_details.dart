@@ -1,0 +1,1795 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:draze/user/provider/property_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:draze/core/constants/appColors.dart';
+import 'package:draze/core/constants/appSizes.dart';
+import 'package:draze/user/models/hotel_modal.dart';
+
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
+
+class HotelDetailsScreen extends ConsumerStatefulWidget {
+  final String hotelId;
+
+  const HotelDetailsScreen({super.key, required this.hotelId});
+
+  @override
+  ConsumerState<HotelDetailsScreen> createState() => _HotelDetailsScreenState();
+}
+
+class _HotelDetailsScreenState extends ConsumerState<HotelDetailsScreen> {
+  late PageController _pageController;
+  late ScrollController _scrollController;
+  int _currentImageIndex = 0;
+  bool _isFavorite = false;
+  DateTime? _lastTap;
+  String? _selectedRoomType;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _precacheImages();
+    });
+  }
+
+  void _precacheImages() {
+    final hotel = ref
+        .read(hotelPropertiesProvider)
+        .properties
+        .firstWhere(
+          (h) => h.id == widget.hotelId,
+          orElse:
+              () => HotelProperty(
+                id: widget.hotelId,
+                name: '',
+                description: '',
+                location: '',
+                city: '',
+                state: '',
+                latitude: 0.0,
+                longitude: 0.0,
+                pricePerNight: 0.0,
+                originalPrice: 0.0,
+                starRating: 0,
+                images: const [],
+                amenities: const [],
+                contactPhone: '',
+                contactEmail: '',
+                website: '',
+                isAvailable: false,
+                hotelType: '',
+                roomTypes: const [],
+                rating: 0.0,
+                reviewCount: 0,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+                nearbyAttractions: const [],
+                hasParking: false,
+                hasFreeWifi: false,
+                hasBreakfast: false,
+                hasPool: false,
+                hasGym: false,
+                hasSpa: false,
+                hasRestaurant: false,
+                hasRoomService: false,
+                isVerified: false,
+                checkInTime: '',
+                checkOutTime: '',
+                cancellationPolicy: '',
+                languages: const [],
+                isPetFriendly: false,
+                hasAirConditioning: false,
+                distanceFromCenter: 0.0,
+                transportAccess: '',
+                certificates: const [],
+                managerName: '',
+                managerPhone: '',
+                hasConferenceRooms: false,
+                totalRooms: 0,
+                discountPercentage: 0.0,
+              ),
+        );
+    final images = hotel.images;
+    if (images.isNotEmpty) {
+      for (var url in images.take(2)) {
+        precacheImage(CachedNetworkImageProvider(url), context);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hotelAsync = ref.watch(
+      hotelPropertiesProvider.select(
+        (state) => AsyncValue<HotelProperty?>.data(
+          state.properties.firstWhere(
+            (h) => h.id == widget.hotelId,
+            orElse:
+                () => HotelProperty(
+                  id: widget.hotelId,
+                  name: '',
+                  description: '',
+                  location: '',
+                  city: '',
+                  state: '',
+                  latitude: 0.0,
+                  longitude: 0.0,
+                  pricePerNight: 0.0,
+                  originalPrice: 0.0,
+                  starRating: 0,
+                  images: const [],
+                  amenities: const [],
+                  contactPhone: '',
+                  contactEmail: '',
+                  website: '',
+                  isAvailable: false,
+                  hotelType: '',
+                  roomTypes: const [],
+                  rating: 0.0,
+                  reviewCount: 0,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                  nearbyAttractions: const [],
+                  hasParking: false,
+                  hasFreeWifi: false,
+                  hasBreakfast: false,
+                  hasPool: false,
+                  hasGym: false,
+                  hasSpa: false,
+                  hasRestaurant: false,
+                  hasRoomService: false,
+                  isVerified: false,
+                  checkInTime: '',
+                  checkOutTime: '',
+                  cancellationPolicy: '',
+                  languages: const [],
+                  isPetFriendly: false,
+                  hasAirConditioning: false,
+                  distanceFromCenter: 0.0,
+                  transportAccess: '',
+                  certificates: const [],
+                  managerName: '',
+                  managerPhone: '',
+                  hasConferenceRooms: false,
+                  totalRooms: 0,
+                  discountPercentage: 0.0,
+                ),
+          ),
+        ),
+      ),
+    );
+
+    return hotelAsync.when(
+      data: (hotel) => _buildContent(hotel),
+      loading: () => _buildLoading(),
+      error: (error, stack) => _buildError(error),
+    );
+  }
+
+  Widget _buildContent(HotelProperty? hotel) {
+    if (hotel == null || hotel.id.isEmpty) {
+      return _buildError('Hotel not found');
+    }
+
+    final sections = [
+      SizedBox(height: AppSizes.smallPadding(context) + 2),
+      _buildHotelHeader(hotel),
+      SizedBox(height: AppSizes.smallPadding(context) + 2),
+      _buildRoomTypesSection(hotel),
+      if (hotel.amenities.isNotEmpty) _buildAmenities(hotel),
+      _buildLocationSection(hotel),
+      _buildOwnerSection(hotel),
+      if (hotel.nearbyAttractions.isNotEmpty) _buildNearbyPlaces(hotel),
+      if (hotel.description.isNotEmpty) _buildDescription(hotel),
+      if (hotel.cancellationPolicy.isNotEmpty) _buildCancellationPolicy(hotel),
+      SizedBox(height: AppSizes.buttonHeight(context) * 1.5),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          _buildAppBar(hotel),
+          _buildImageCarousel(hotel),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSizes.smallPadding(context) + 2,
+              vertical: AppSizes.smallPadding(context) + 2 / 2,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => sections[index],
+                childCount: sections.length,
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: _buildFloatingActionButton(hotel),
+      bottomNavigationBar: _buildBottomBar(hotel),
+    );
+  }
+
+  Widget _buildLoading() {
+    return Scaffold(
+      body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+  }
+
+  Widget _buildError(dynamic error) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+            size: AppSizes.smallIcon(context),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: AppColors.primary,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: AppSizes.smallIcon(context),
+              color: Colors.red,
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Text(
+              'Error: $error',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AppSizes.smallText(context) - 3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            ElevatedButton(
+              onPressed: () {
+                ref.invalidate(hotelPropertiesProvider);
+                setState(() {});
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.mediumPadding(context),
+                  vertical: AppSizes.smallPadding(context) + 2,
+                ),
+              ),
+              child: Text(
+                'Retry',
+                style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.mediumPadding(context),
+                  vertical: AppSizes.smallPadding(context) + 2,
+                ),
+              ),
+              child: Text(
+                'Go Back',
+                style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageCarousel(HotelProperty hotel) {
+    final images = hotel.images;
+    return SliverToBoxAdapter(
+      child: Card(
+        margin: EdgeInsets.all(AppSizes.smallPadding(context) + 4),
+        elevation: AppSizes.cardElevation(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            AppSizes.cardCornerRadius(context),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.3,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged:
+                    (index) => setState(() => _currentImageIndex = index),
+                itemCount: images.isNotEmpty ? images.length : 1,
+                itemBuilder: (context, index) {
+                  return Hero(
+                    tag: 'hotel_image_${hotel.id}_$index',
+                    child:
+                        images.isNotEmpty
+                            ? CachedNetworkImage(
+                              imageUrl: images[index],
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => _buildPlaceholderImage(),
+                              errorWidget:
+                                  (context, url, error) =>
+                                      _buildPlaceholderImage(),
+                            )
+                            : _buildPlaceholderImage(),
+                  );
+                },
+              ),
+              if (images.length > 1)
+                Positioned(
+                  bottom: AppSizes.smallPadding(context) + 2,
+                  left: 0,
+                  right: 0,
+                  child: _buildImageIndicators(images.length),
+                ),
+              Positioned(
+                top: AppSizes.smallPadding(context) + 2,
+                right: AppSizes.smallPadding(context) + 2,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSizes.smallPadding(context) + 2,
+                    vertical: AppSizes.smallPadding(context) + 2 / 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.cardCornerRadius(context),
+                    ),
+                  ),
+                  child: Text(
+                    '${_currentImageIndex + 1}/${images.isNotEmpty ? images.length : 1}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: AppSizes.smallText(context) - 3,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: AppSizes.smallPadding(context) + 2,
+                right: AppSizes.smallPadding(context) + 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.cardCornerRadius(context) * 2,
+                    ),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.fullscreen,
+                      color: Colors.white,
+                      size: AppSizes.smallIcon(context),
+                    ),
+                    onPressed: () => _showImageGallery(context, images),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Image.asset(
+      'assets/images/placeholder_logo.png',
+      fit: BoxFit.cover,
+      errorBuilder:
+          (context, error, stackTrace) => Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: AppSizes.smallIcon(context),
+                color: Colors.grey,
+              ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildImageIndicators(int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        return Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: AppSizes.smallPadding(context) + 2 / 2,
+          ),
+          width:
+              _currentImageIndex == index
+                  ? AppSizes.mediumPadding(context) * 2
+                  : AppSizes.smallPadding(context) + 2,
+          height: AppSizes.smallPadding(context) + 2,
+          decoration: BoxDecoration(
+            color: _currentImageIndex == index ? Colors.white : Colors.white54,
+            borderRadius: BorderRadius.circular(
+              AppSizes.cardCornerRadius(context) / 2,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildAppBar(HotelProperty hotel) {
+    return SliverAppBar(
+      pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leading: IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios,
+          color: Colors.black87,
+          size: AppSizes.smallIcon(context),
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Text(
+        hotel.name,
+        style: TextStyle(
+          color: Colors.black87,
+          fontSize: AppSizes.mediumText(context) - 2,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            _isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: _isFavorite ? Colors.red : Colors.black87,
+            size: AppSizes.smallIcon(context),
+          ),
+          onPressed: _toggleFavorite,
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.share_outlined,
+            color: Colors.black87,
+            size: AppSizes.smallIcon(context),
+          ),
+          onPressed: () => _shareHotel(hotel),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHotelHeader(HotelProperty hotel) {
+    return Padding(
+      padding: EdgeInsets.all(AppSizes.smallPadding(context) + 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  hotel.name,
+                  style: TextStyle(
+                    fontSize: AppSizes.mediumText(context) - 2,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (hotel.isVerified)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSizes.smallPadding(context) + 2,
+                    vertical: AppSizes.smallPadding(context) + 2 / 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(
+                      AppSizes.cardCornerRadius(context),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.verified,
+                        color: Colors.green,
+                        size: AppSizes.smallIcon(context),
+                      ),
+                      SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+                      Text(
+                        'Verified',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: AppSizes.smallText(context) - 3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on,
+                color: AppColors.textSecondary,
+                size: AppSizes.smallIcon(context),
+              ),
+              SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+              Expanded(
+                child: Text(
+                  '${hotel.location}, ${hotel.city}, ${hotel.state}',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppSizes.smallText(context) - 3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+          Row(
+            children: [
+              ...List.generate(5, (index) {
+                return Icon(
+                  index < hotel.starRating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: AppSizes.smallIcon(context),
+                );
+              }),
+              SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+              Text(
+                '${hotel.rating} (${hotel.reviewCount} reviews)',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.smallText(context) - 3,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                color: AppColors.textSecondary,
+                size: AppSizes.smallIcon(context),
+              ),
+              SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+              Text(
+                'Check-in: ${hotel.checkInTime} | Check-out: ${hotel.checkOutTime}',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppSizes.smallText(context) - 3,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoomTypesSection(HotelProperty hotel) {
+    final roomTypes = hotel.roomTypes;
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.mediumPadding(context),
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Room Types',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            ...roomTypes.map((room) => _buildRoomTypeCard(room)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoomTypeCard(RoomType room) {
+    return Container(
+      margin: EdgeInsets.only(bottom: AppSizes.smallPadding(context) + 2),
+      padding: EdgeInsets.all(AppSizes.smallPadding(context) + 2),
+      decoration: BoxDecoration(
+        color:
+            _selectedRoomType == room.name
+                ? AppColors.primary.withOpacity(0.1)
+                : Colors.grey[100],
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+        border: Border.all(
+          color:
+              _selectedRoomType == room.name
+                  ? AppColors.primary
+                  : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedRoomType = room.name;
+          });
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  room.name,
+                  style: TextStyle(
+                    fontSize: AppSizes.mediumText(context) - 2,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '₹${room.pricePerNight.toStringAsFixed(0)}/night',
+                  style: TextStyle(
+                    fontSize: AppSizes.smallText(context) - 3,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+            Text(
+              'Capacity: ${room.maxOccupancy} guests',
+              style: TextStyle(
+                fontSize: AppSizes.smallText(context) - 3,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (room.amenities.isNotEmpty) ...[
+              SizedBox(height: AppSizes.smallPadding(context) + 2 / 2),
+              Wrap(
+                spacing: AppSizes.smallPadding(context) + 2 / 2,
+                runSpacing: AppSizes.smallPadding(context) + 2 / 2,
+                children:
+                    room.amenities
+                        .map((amenity) => _buildAmenityChip(amenity))
+                        .toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmenities(HotelProperty hotel) {
+    final amenities = hotel.amenities;
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hotel Amenities',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Wrap(
+              spacing: AppSizes.smallPadding(context) + 2 / 2,
+              runSpacing: AppSizes.smallPadding(context) + 2 / 2,
+              children:
+                  amenities
+                      .map((amenity) => _buildAmenityChip(amenity))
+                      .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmenityChip(String amenity) {
+    final icon = _getAmenityIcon(amenity);
+    return Tooltip(
+      message: amenity,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.smallPadding(context) + 2,
+          vertical: AppSizes.smallPadding(context) + 2 / 2,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(
+            AppSizes.cardCornerRadius(context),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: AppSizes.smallIcon(context),
+              color: AppColors.primary,
+            ),
+            SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+            Text(
+              amenity,
+              style: TextStyle(
+                fontSize: AppSizes.smallText(context) - 3,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getAmenityIcon(String amenity) {
+    switch (amenity.toLowerCase()) {
+      case 'free wifi':
+      case 'wifi':
+        return Icons.wifi;
+      case 'parking':
+        return Icons.local_parking;
+      case '24/7 security':
+      case 'security':
+        return Icons.security;
+      case 'swimming pool':
+      case 'pool':
+        return Icons.pool;
+      case 'gym':
+        return Icons.fitness_center;
+      case 'spa':
+        return Icons.spa;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'room service':
+        return Icons.room_service;
+      case 'business center':
+        return Icons.business_center;
+      case 'conference rooms':
+        return Icons.meeting_room;
+      default:
+        return Icons.check_circle_outline;
+    }
+  }
+
+  Widget _buildLocationSection(HotelProperty hotel) {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Location',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Card(
+              elevation: AppSizes.cardElevation(context) / 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppSizes.cardCornerRadius(context),
+                ),
+              ),
+              child: Container(
+                height: AppSizes.buttonHeight(context) * 2,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(
+                    AppSizes.cardCornerRadius(context),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    'Map Preview (Integration Pending)',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: AppSizes.smallText(context) - 3,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: AppColors.primary,
+                  size: AppSizes.smallIcon(context),
+                ),
+                SizedBox(width: AppSizes.smallPadding(context) + 2 / 2),
+                Expanded(
+                  child: Text(
+                    '${hotel.location}, ${hotel.city}, ${hotel.state}',
+                    style: TextStyle(
+                      fontSize: AppSizes.smallText(context) - 3,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openMap(hotel),
+                    icon: Icon(Icons.map, size: AppSizes.smallIcon(context)),
+                    label: Text(
+                      'View on Map',
+                      style: TextStyle(
+                        fontSize: AppSizes.smallText(context) - 3,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.cardCornerRadius(context),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppSizes.smallPadding(context) + 2,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: AppSizes.smallPadding(context) + 2),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _getDirections(hotel),
+                    icon: Icon(
+                      Icons.directions,
+                      size: AppSizes.smallIcon(context),
+                    ),
+                    label: Text(
+                      'Directions',
+                      style: TextStyle(
+                        fontSize: AppSizes.smallText(context) - 3,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.cardCornerRadius(context),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppSizes.smallPadding(context) + 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOwnerSection(HotelProperty hotel) {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Contact Hotel',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: AppSizes.smallIcon(context) / 2,
+                  backgroundColor: AppColors.primary.withOpacity(0.2),
+                  child: Text(
+                    hotel.managerName.isNotEmpty
+                        ? hotel.managerName.substring(0, 1).toUpperCase()
+                        : 'H',
+                    style: TextStyle(
+                      fontSize: AppSizes.mediumText(context) - 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                SizedBox(width: AppSizes.smallPadding(context) + 2),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hotel.managerName.isNotEmpty
+                            ? hotel.managerName
+                            : 'Hotel Management',
+                        style: TextStyle(
+                          fontSize: AppSizes.mediumText(context) - 2,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Hotel Manager',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: AppSizes.smallText(context) - 3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.phone,
+                        color: Colors.green,
+                        size: AppSizes.smallIcon(context),
+                      ),
+                      onPressed: () => _callOwner(hotel),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.email,
+                        color: Colors.blue,
+                        size: AppSizes.smallIcon(context),
+                      ),
+                      onPressed: () => _emailOwner(hotel),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNearbyPlaces(HotelProperty hotel) {
+    final nearbyPlaces = hotel.nearbyAttractions;
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nearby Places',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Wrap(
+              spacing: AppSizes.smallPadding(context) + 2 / 2,
+              runSpacing: AppSizes.smallPadding(context) + 2 / 2,
+              children:
+                  nearbyPlaces
+                      .map((place) => _buildNearbyPlaceChip(place))
+                      .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNearbyPlaceChip(String place) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2,
+        vertical: AppSizes.smallPadding(context) + 2 / 2,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Text(
+        place,
+        style: TextStyle(
+          fontSize: AppSizes.smallText(context) - 3,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDescription(HotelProperty hotel) {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Description',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Text(
+              hotel.description,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AppSizes.smallText(context) - 3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCancellationPolicy(HotelProperty hotel) {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSizes.smallPadding(context) + 2 / 4,
+        vertical: AppSizes.smallPadding(context) + 2,
+      ),
+      elevation: AppSizes.cardElevation(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.cardCornerRadius(context)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cancellation Policy',
+              style: TextStyle(
+                fontSize: AppSizes.mediumText(context) - 2,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: AppSizes.smallPadding(context) + 2),
+            Text(
+              hotel.cancellationPolicy,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AppSizes.smallText(context) - 3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton(HotelProperty hotel) {
+    return FloatingActionButton(
+      onPressed: _scrollToTop,
+      backgroundColor: AppColors.primary,
+      mini: true,
+      child: Icon(
+        Icons.arrow_upward,
+        color: Colors.white,
+        size: AppSizes.smallIcon(context),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(HotelProperty hotel) {
+    return Container(
+      padding: EdgeInsets.all(AppSizes.smallPadding(context) + 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: AppSizes.cardElevation(context),
+            offset: Offset(0, -AppSizes.cardElevation(context) / 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _callOwner(hotel),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppSizes.cardCornerRadius(context),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: AppSizes.smallPadding(context) + 2,
+                ),
+              ),
+              child: Text(
+                'Contact Hotel',
+                style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+              ),
+            ),
+          ),
+          SizedBox(width: AppSizes.smallPadding(context) + 2),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _showBookingBottomSheet(hotel),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppSizes.cardCornerRadius(context),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: AppSizes.smallPadding(context) + 2,
+                ),
+              ),
+              child: Text(
+                'Book Now',
+                style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBookingBottomSheet(HotelProperty hotel) {
+    final roomTypes = hotel.roomTypes;
+    final formKey = GlobalKey<FormState>();
+    String? name;
+    String? email;
+    DateTime? checkInDate;
+    DateTime? checkOutDate;
+    int numberOfGuests = 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.cardCornerRadius(context)),
+        ),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Book Your Stay',
+                          style: TextStyle(
+                            fontSize: AppSizes.mediumText(context) - 2,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            size: AppSizes.smallIcon(context),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: AppSizes.smallPadding(context) + 2),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Room Type',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.cardCornerRadius(context),
+                          ),
+                        ),
+                      ),
+                      value: _selectedRoomType,
+                      items:
+                          roomTypes
+                              .map(
+                                (room) => DropdownMenuItem(
+                                  value: room.name,
+                                  child: Text(
+                                    room.name,
+                                    style: TextStyle(
+                                      fontSize: AppSizes.smallText(context) - 3,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setModalState(() {
+                          _selectedRoomType = value;
+                        });
+                        setState(() {
+                          _selectedRoomType = value;
+                        });
+                      },
+                      validator:
+                          (value) =>
+                              value == null
+                                  ? 'Please select a room type'
+                                  : null,
+                    ),
+                    SizedBox(height: AppSizes.smallPadding(context) + 2),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.cardCornerRadius(context),
+                          ),
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: AppSizes.smallText(context) - 3,
+                      ),
+                      validator:
+                          (value) =>
+                              value?.isEmpty ?? true
+                                  ? 'Please enter your name'
+                                  : null,
+                      onSaved: (value) => name = value,
+                    ),
+                    SizedBox(height: AppSizes.smallPadding(context) + 2),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.cardCornerRadius(context),
+                          ),
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: AppSizes.smallText(context) - 3,
+                      ),
+                      validator:
+                          (value) =>
+                              value?.isEmpty ??
+                                      true ||
+                                          !RegExp(
+                                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                          ).hasMatch(value ?? '')
+                                  ? 'Please enter a valid email'
+                                  : null,
+                      onSaved: (value) => email = value,
+                    ),
+                    SizedBox(height: AppSizes.smallPadding(context) + 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(
+                                  Duration(days: 365),
+                                ),
+                              );
+                              if (date != null) {
+                                setModalState(() {
+                                  checkInDate = date;
+                                });
+                              }
+                            },
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'Check-in Date',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.cardCornerRadius(context),
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                checkInDate != null
+                                    ? DateFormat(
+                                      'dd/MM/yyyy',
+                                    ).format(checkInDate!)
+                                    : 'Select Date',
+                                style: TextStyle(
+                                  fontSize: AppSizes.smallText(context) - 3,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: AppSizes.smallPadding(context) + 2),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate:
+                                    checkInDate?.add(Duration(days: 1)) ??
+                                    DateTime.now(),
+                                firstDate:
+                                    checkInDate?.add(Duration(days: 1)) ??
+                                    DateTime.now(),
+                                lastDate: DateTime.now().add(
+                                  Duration(days: 365),
+                                ),
+                              );
+                              if (date != null) {
+                                setModalState(() {
+                                  checkOutDate = date;
+                                });
+                              }
+                            },
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'Check-out Date',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.cardCornerRadius(context),
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                checkOutDate != null
+                                    ? DateFormat(
+                                      'dd/MM/yyyy',
+                                    ).format(checkOutDate!)
+                                    : 'Select Date',
+                                style: TextStyle(
+                                  fontSize: AppSizes.smallText(context) - 3,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: AppSizes.smallPadding(context) + 2),
+                    DropdownButtonFormField<int>(
+                      decoration: InputDecoration(
+                        labelText: 'Number of Guests',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.cardCornerRadius(context),
+                          ),
+                        ),
+                      ),
+                      value: numberOfGuests,
+                      items:
+                          List.generate(10, (index) => index + 1)
+                              .map(
+                                (guests) => DropdownMenuItem(
+                                  value: guests,
+                                  child: Text(
+                                    '$guests Guest${guests > 1 ? 's' : ''}',
+                                    style: TextStyle(
+                                      fontSize: AppSizes.smallText(context) - 3,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setModalState(() {
+                          numberOfGuests = value ?? 1;
+                        });
+                      },
+                    ),
+                    SizedBox(height: AppSizes.mediumPadding(context)),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (formKey.currentState!.validate()) {
+                            formKey.currentState!.save();
+                            if (checkInDate == null || checkOutDate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Please select check-in and check-out dates',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            Navigator.pop(context);
+                            _showBookingConfirmation(
+                              hotel,
+                              name!,
+                              email!,
+                              checkInDate!,
+                              checkOutDate!,
+                              numberOfGuests,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSizes.mediumPadding(context),
+                            vertical: AppSizes.smallPadding(context) + 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.cardCornerRadius(context),
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Confirm Booking',
+                          style: TextStyle(
+                            fontSize: AppSizes.smallText(context) - 3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showBookingConfirmation(
+    HotelProperty hotel,
+    String name,
+    String email,
+    DateTime checkInDate,
+    DateTime checkOutDate,
+    int numberOfGuests,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                AppSizes.cardCornerRadius(context),
+              ),
+            ),
+            content: Container(
+              padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary.withOpacity(0.1), Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(
+                  AppSizes.cardCornerRadius(context),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: AppSizes.largeIcon(context),
+                  ),
+                  SizedBox(height: AppSizes.smallPadding(context) + 2),
+                  Text(
+                    'Booking Confirmed!',
+                    style: TextStyle(
+                      fontSize: AppSizes.mediumText(context) - 2,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: AppSizes.smallPadding(context) + 2),
+                  Text(
+                    'Thank you, $name! Your booking at ${hotel.name} has been successfully confirmed.',
+                    style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: AppSizes.smallPadding(context) + 2),
+                  Text(
+                    'Details have been sent to $email',
+                    style: TextStyle(
+                      fontSize: AppSizes.smallText(context) - 3,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: AppSizes.smallPadding(context) + 2),
+                  Text(
+                    'Check-in: ${DateFormat('dd/MM/yyyy').format(checkInDate)}\nCheck-out: ${DateFormat('dd/MM/yyyy').format(checkOutDate)}\nGuests: $numberOfGuests',
+                    style: TextStyle(fontSize: AppSizes.smallText(context) - 3),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: AppSizes.mediumPadding(context)),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSizes.mediumPadding(context),
+                        vertical: AppSizes.smallPadding(context) + 2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.cardCornerRadius(context),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(
+                        fontSize: AppSizes.smallText(context) - 3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  void _showImageGallery(BuildContext context, List<String> images) {
+    if (images.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.black,
+            child: PageView.builder(
+              controller: PageController(initialPage: _currentImageIndex),
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  child: CachedNetworkImage(
+                    imageUrl: images[index],
+                    fit: BoxFit.contain,
+                    placeholder:
+                        (context, url) =>
+                            Center(child: CircularProgressIndicator()),
+                    errorWidget:
+                        (context, url, error) => _buildPlaceholderImage(),
+                  ),
+                );
+              },
+            ),
+          ),
+    );
+  }
+
+  void _toggleFavorite() {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    if (mounted) {
+      setState(() {
+        _isFavorite = !_isFavorite;
+        final favorites = ref.read(favoritePropertiesProvider);
+        if (_isFavorite) {
+          ref.read(favoritePropertiesProvider.notifier).state = {
+            ...favorites,
+            widget.hotelId,
+          };
+        } else {
+          ref.read(favoritePropertiesProvider.notifier).state =
+              favorites.where((id) => id != widget.hotelId).toSet();
+        }
+      });
+    }
+  }
+
+  void _shareHotel(HotelProperty hotel) {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    final shareText = '''
+Check out this amazing hotel!
+Name: ${hotel.name}
+Location: ${hotel.location}, ${hotel.city}, ${hotel.state}
+Book your stay on Draze!
+''';
+    Share.share(shareText);
+  }
+
+  void _callOwner(HotelProperty hotel) async {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    final phone = hotel.managerPhone;
+    if (phone.isNotEmpty && mounted) {
+      final uri = Uri.parse('tel:$phone');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot make call')));
+      }
+    }
+  }
+
+  void _emailOwner(HotelProperty hotel) async {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    final email = hotel.contactEmail;
+    if (email.isNotEmpty && mounted) {
+      final uri = Uri.parse(
+        'mailto:$email?subject=Inquiry about ${hotel.name}',
+      );
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Cannot send email')));
+      }
+    }
+  }
+
+  void _openMap(HotelProperty hotel) async {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    final lat = hotel.latitude;
+    final lng = hotel.longitude;
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cannot open map')));
+    }
+  }
+
+  void _getDirections(HotelProperty hotel) async {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inMilliseconds < 500) {
+      return;
+    }
+    _lastTap = now;
+
+    final lat = hotel.latitude;
+    final lng = hotel.longitude;
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cannot get directions')));
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.jumpTo(0);
+  }
+}
