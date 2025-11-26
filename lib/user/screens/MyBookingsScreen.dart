@@ -34,10 +34,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: Column(
-        children: [
-          _buildTabBar(),
-          Expanded(child: _buildTabBarView()),
-        ],
+        children: [_buildTabBar(), Expanded(child: _buildTabBarView())],
       ),
     );
   }
@@ -46,12 +43,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.primary,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20.sp),
+        onPressed: () => Navigator.pop(context),
+      ),
       title: Text(
         'My Bookings',
         style: TextStyle(
-          fontSize: 24.sp,
-          fontWeight: FontWeight.bold,
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w600,
           color: Colors.white,
+          letterSpacing: 0.5,
         ),
       ),
       centerTitle: false,
@@ -67,15 +69,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
+            blurRadius: 12.r,
             spreadRadius: 0,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4.h),
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
+            blurRadius: 6.r,
             spreadRadius: 0,
-            offset: const Offset(0, 1),
+            offset: Offset(0, 1.h),
           ),
         ],
       ),
@@ -91,26 +93,26 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 8,
+                blurRadius: 8.r,
                 spreadRadius: 0,
-                offset: const Offset(0, 2),
+                offset: Offset(0, 2.h),
               ),
             ],
           ),
           labelColor: Colors.white,
           unselectedLabelColor: AppColors.textSecondary,
           labelStyle: TextStyle(
-            fontSize: 15.sp,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),
           unselectedLabelStyle: TextStyle(
-            fontSize: 15.sp,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w500,
             letterSpacing: 0.3,
           ),
           splashFactory: NoSplash.splashFactory,
-          overlayColor: MaterialStateProperty.all(Colors.transparent),
+          overlayColor: WidgetStateProperty.all(Colors.transparent),
           tabs: [
             Tab(
               child: Container(
@@ -120,8 +122,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.home_outlined, size: 18.sp),
-                    SizedBox(width: 8.w),
-                    const Text('Property Visits'),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        'Property Visits',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -134,8 +141,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.hotel_outlined, size: 18.sp),
-                    SizedBox(width: 8.w),
-                    const Text('Hotel Enquiries'),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: Text(
+                        'Hotel Enquiries',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -149,10 +161,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   Widget _buildTabBarView() {
     return TabBarView(
       controller: _tabController,
-      children: const [
-        MyVisitsScreen(),
-        MyEnquiriesScreen(),
-      ],
+      children: const [MyVisitsScreen(), MyEnquiriesScreen()],
     );
   }
 }

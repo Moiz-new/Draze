@@ -168,32 +168,35 @@ class MyApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp.router(
-          title: 'Draze',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
-              secondary: AppColors.secondary,
-              surface: AppColors.surface,
-            ),
-            useMaterial3: true,
-            fontFamily: 'Poppins',
-            scaffoldBackgroundColor: AppColors.background,
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              centerTitle: true,
-              titleTextStyle: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: AppSizes.titleText(context),
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Poppins',
+        return SafeArea(
+          top: false,
+          child: MaterialApp.router(
+            title: 'Draze',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.light(
+                primary: AppColors.primary,
+                secondary: AppColors.secondary,
+                surface: AppColors.surface,
               ),
-              iconTheme: const IconThemeData(color: AppColors.textPrimary),
+              useMaterial3: true,
+              fontFamily: 'Poppins',
+              scaffoldBackgroundColor: AppColors.background,
+              appBarTheme: AppBarTheme(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                centerTitle: true,
+                titleTextStyle: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: AppSizes.titleText(context),
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                ),
+                iconTheme: const IconThemeData(color: AppColors.textPrimary),
+              ),
             ),
+            routerConfig: router,
           ),
-          routerConfig: router,
         );
       },
     );

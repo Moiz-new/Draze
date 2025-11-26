@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class MyVisitModel {
   final String id;
   final String userId;
@@ -43,6 +45,54 @@ class MyVisitModel {
     this.version = 0,
   });
 
+  // Helper method to parse various date formats
+  static DateTime? _parseDate(dynamic dateValue) {
+    if (dateValue == null) return null;
+
+    try {
+      // If it's already a DateTime object
+      if (dateValue is DateTime) {
+        return dateValue;
+      }
+
+      String dateStr = dateValue.toString();
+
+      // Try ISO 8601 format first
+      try {
+        return DateTime.parse(dateStr);
+      } catch (e) {
+        // If ISO format fails, try parsing the JavaScript Date string format
+        // Format: "Fri Nov 28 2025 00:05:00 GMT+0530 (India Standard Time)"
+
+        // Remove the timezone name in parentheses
+        dateStr = dateStr.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+
+        // Try different date formats
+        List<DateFormat> formats = [
+          DateFormat('EEE MMM dd yyyy HH:mm:ss'),
+          // Without timezone
+          DateFormat('EEE MMM dd yyyy HH:mm:ss ZZZZ'),
+          // With timezone like GMT+0530
+        ];
+
+        for (var format in formats) {
+          try {
+            return format.parse(dateStr, true).toLocal();
+          } catch (e) {
+            continue;
+          }
+        }
+
+        // If all parsing attempts fail, return null
+        print('Failed to parse date: $dateStr');
+        return null;
+      }
+    } catch (e) {
+      print('Error parsing date: $e');
+      return null;
+    }
+  }
+
   factory MyVisitModel.fromJson(Map<String, dynamic> json) {
     return MyVisitModel(
       id: json['_id'] ?? '',
@@ -52,14 +102,14 @@ class MyVisitModel {
       name: json['name'],
       email: json['email'],
       mobile: json['mobile'],
-      visitDate: json['visitDate'] != null ? DateTime.parse(json['visitDate']) : null,
-      scheduledDate: json['scheduledDate'] != null ? DateTime.parse(json['scheduledDate']) : null,
+      visitDate: _parseDate(json['visitDate']),
+      scheduledDate: _parseDate(json['scheduledDate']),
       purpose: json['purpose'],
       status: json['status'] ?? '',
       notes: json['notes'] ?? '',
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
-      confirmedAt: json['confirmedAt'] != null ? DateTime.parse(json['confirmedAt']) : null,
+      createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
+      updatedAt: _parseDate(json['updatedAt']) ?? DateTime.now(),
+      confirmedAt: _parseDate(json['confirmedAt']),
       visitDateFormatted: json['visitDateFormatted'] ?? '',
       statusText: json['statusText'] ?? '',
       isUpcoming: json['isUpcoming'] ?? false,
@@ -146,9 +196,10 @@ class MyVisitModel {
 
   String get displayTitle => purpose ?? 'Property Visit';
 
-  String get displayDate => visitDateFormatted.isNotEmpty
-      ? visitDateFormatted
-      : effectiveDate.toString();
+  String get displayDate =>
+      visitDateFormatted.isNotEmpty
+          ? visitDateFormatted
+          : effectiveDate.toString();
 
   bool get isConfirmed => status.toLowerCase() == 'confirmed';
 
@@ -178,9 +229,13 @@ class MyVisitsResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       totalVisits: json['totalVisits'] ?? 0,
-      visits: (json['visits'] as List<dynamic>?)
-          ?.map((visit) => MyVisitModel.fromJson(visit as Map<String, dynamic>))
-          .toList() ?? [],
+      visits:
+          (json['visits'] as List<dynamic>?)
+              ?.map(
+                (visit) => MyVisitModel.fromJson(visit as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
       pagination: Pagination.fromJson(json['pagination'] ?? {}),
     );
   }
@@ -206,11 +261,7 @@ class Pagination {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'page': page,
-      'limit': limit,
-      'totalPages': totalPages,
-    };
+    return {'page': page, 'limit': limit, 'totalPages': totalPages};
   }
 }
 

@@ -465,6 +465,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen>
   }
 
   Widget _buildErrorWidget(VisitsProvider provider) {
+    print(provider.error);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(32.w),
