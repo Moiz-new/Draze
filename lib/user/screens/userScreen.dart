@@ -3,6 +3,7 @@ import 'package:draze/core/constants/appSizes.dart';
 import 'package:draze/user/screens/SellerPropertyListScreen.dart';
 import 'package:draze/user/screens/HotelBanquetScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:lottie/lottie.dart';
@@ -331,27 +332,31 @@ class _UserHomeScreenState extends State<UserHomeScreen>
         controller: _scrollController,
         headerSliverBuilder:
             (context, innerBoxIsScrolled) => [
-          _buildOptimizedAppBar(context, innerBoxIsScrolled),
-          _buildTabSection(context),
-        ],
+              _buildOptimizedAppBar(context, innerBoxIsScrolled),
+              _buildTabSection(context),
+            ],
         body: _buildTabContent(),
       ),
       floatingActionButton:
-      _showScrollToTop
-          ? FloatingActionButton(
-        onPressed: _scrollToTop,
-        mini: true,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.arrow_upward, color: Colors.white),
-      )
-          : null,
+          _showScrollToTop
+              ? FloatingActionButton(
+                onPressed: _scrollToTop,
+                mini: true,
+                backgroundColor: AppColors.primary,
+                child: Icon(
+                  Icons.arrow_upward,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              )
+              : null,
     );
   }
 
   Widget _buildOptimizedAppBar(BuildContext context, bool innerBoxIsScrolled) {
     return SliverAppBar(
-      expandedHeight: AppSizes.buttonHeight(context) * 4.5,
-      toolbarHeight: 8,
+      expandedHeight: 220.h,
+      toolbarHeight: 8.h,
       floating: false,
       pinned: true,
       snap: false,
@@ -377,16 +382,15 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           ),
           child: SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(AppSizes.mediumPadding(context)),
+              padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
-                  const SizedBox(height: 20),
                   _buildHeaderText(),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   _buildLocationRow(),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   _buildSearchBar(),
                 ],
               ),
@@ -394,11 +398,11 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           ),
         ),
         Positioned(
-          top: -100,
-          right: -30,
+          top: -100.h,
+          right: -30.w,
           child: Container(
-            width: 150,
-            height: 150,
+            width: 150.w,
+            height: 150.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.2),
@@ -406,11 +410,11 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           ),
         ),
         Positioned(
-          top: 50,
-          right: 100,
+          top: 50.h,
+          right: 100.w,
           child: Container(
-            width: 80,
-            height: 80,
+            width: 80.w,
+            height: 80.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.1),
@@ -425,25 +429,25 @@ class _UserHomeScreenState extends State<UserHomeScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           'Draze',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 24.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
         IconButton(
           icon: Container(
-            padding: EdgeInsets.all(AppSizes.smallPadding(context) / 2),
+            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
               Icons.notifications_outlined,
               color: Colors.white,
-              size: AppSizes.mediumIcon(context),
+              size: 22.sp,
             ),
           ),
           onPressed: () {
@@ -455,14 +459,14 @@ class _UserHomeScreenState extends State<UserHomeScreen>
   }
 
   Widget _buildHeaderText() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Text(
           'Welcome User! ,',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -474,35 +478,31 @@ class _UserHomeScreenState extends State<UserHomeScreen>
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(6.w),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
           ),
           child:
-          _isLocationLoading
-              ? SizedBox(
-            width: AppSizes.smallIcon(context),
-            height: AppSizes.smallIcon(context),
-            child: Lottie.asset(
-              'assets/animations/Loading.json',
-              width: AppSizes.smallIcon(context),
-              height: AppSizes.smallIcon(context),
-            ),
-          )
-              : Icon(
-            Icons.location_on,
-            color: Colors.white,
-            size: AppSizes.smallIcon(context),
-          ),
+              _isLocationLoading
+                  ? SizedBox(
+                    width: 18.w,
+                    height: 18.h,
+                    child: Lottie.asset(
+                      'assets/animations/Loading.json',
+                      width: 18.w,
+                      height: 18.h,
+                    ),
+                  )
+                  : Icon(Icons.location_on, color: Colors.white, size: 18.sp),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         Expanded(
           child: Text(
             _currentLocation,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: AppSizes.smallText(context),
+              fontSize: 14.sp,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
@@ -531,17 +531,15 @@ class _UserHomeScreenState extends State<UserHomeScreen>
     bool isSearchEnabled = true;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSizes.mediumPadding(context),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            blurRadius: 4.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -550,27 +548,27 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           Icon(
             Icons.search_rounded,
             color: isSearchEnabled ? AppColors.textSecondary : Colors.grey[400],
-            size: AppSizes.mediumIcon(context),
+            size: 22.sp,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: TextField(
               controller: _searchController,
               enabled: isSearchEnabled,
               style: TextStyle(
                 color:
-                isSearchEnabled ? AppColors.textPrimary : Colors.grey[500],
-                fontSize: AppSizes.smallText(context),
+                    isSearchEnabled ? AppColors.textPrimary : Colors.grey[500],
+                fontSize: 14.sp,
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: getSearchHint(),
                 hintStyle: TextStyle(
                   color:
-                  isSearchEnabled
-                      ? AppColors.textSecondary
-                      : Colors.grey[400],
-                  fontSize: AppSizes.smallText(context),
+                      isSearchEnabled
+                          ? AppColors.textSecondary
+                          : Colors.grey[400],
+                  fontSize: 14.sp,
                 ),
               ),
             ),
@@ -579,11 +577,11 @@ class _UserHomeScreenState extends State<UserHomeScreen>
             GestureDetector(
               onTap: _clearSearch,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: EdgeInsets.all(4.w),
                 child: Icon(
                   Icons.clear,
                   color: AppColors.textSecondary,
-                  size: 20,
+                  size: 20.sp,
                 ),
               ),
             ),
@@ -620,20 +618,17 @@ class _OptimizedTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context,
-      double shrinkOffset,
-      bool overlapsContent,
-      ) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: AppColors.surface,
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSizes.smallPadding(context) + 2,
-        vertical: 8,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Stack(
           children: [
@@ -642,15 +637,15 @@ class _OptimizedTabBarDelegate extends SliverPersistentHeaderDelegate {
                 children: List.generate(3, (index) {
                   return Expanded(
                     child: Container(
-                      margin: const EdgeInsets.all(4),
+                      margin: EdgeInsets.all(4.w),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
+                            blurRadius: 6.r,
+                            offset: Offset(0, 3.h),
                           ),
                         ],
                       ),
@@ -663,19 +658,19 @@ class _OptimizedTabBarDelegate extends SliverPersistentHeaderDelegate {
               controller: tabController,
               indicator: _SimpleTabIndicator(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8.r),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
-              indicatorPadding: const EdgeInsets.all(2),
+              indicatorPadding: EdgeInsets.all(2.w),
               labelColor: Colors.white,
               unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: const TextStyle(
+              labelStyle: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 14.sp,
               ),
-              unselectedLabelStyle: const TextStyle(
+              unselectedLabelStyle: TextStyle(
                 fontWeight: FontWeight.w500,
-                fontSize: 14,
+                fontSize: 14.sp,
               ),
               dividerColor: Colors.transparent,
               tabs: const [
@@ -691,10 +686,10 @@ class _OptimizedTabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 60.0;
+  double get maxExtent => 60.h;
 
   @override
-  double get minExtent => 60.0;
+  double get minExtent => 60.h;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>

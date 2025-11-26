@@ -43,6 +43,57 @@ class VisitorModel {
     this.feedback,
   });
 
+  // Helper method to parse various date formats
+  static DateTime _parseVisitDate(dynamic dateValue) {
+    if (dateValue == null) return DateTime.now();
+
+    if (dateValue is DateTime) return dateValue;
+
+    String dateStr = dateValue.toString();
+
+    // Try ISO format first
+    try {
+      return DateTime.parse(dateStr);
+    } catch (e) {
+      // If ISO fails, try parsing the GMT format
+      try {
+        // Remove GMT timezone info and parse
+        // Format: "Sun Nov 30 2025 12:30:00 GMT+0530 (India Standard Time)"
+        final parts = dateStr.split(' GMT');
+        if (parts.isNotEmpty) {
+          final datePart = parts[0]; // "Sun Nov 30 2025 12:30:00"
+
+          // Parse this format manually
+          final datePattern = RegExp(
+              r'(\w+)\s+(\w+)\s+(\d+)\s+(\d+)\s+(\d+):(\d+):(\d+)'
+          );
+          final match = datePattern.firstMatch(datePart);
+
+          if (match != null) {
+            final monthMap = {
+              'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4,
+              'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8,
+              'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+            };
+
+            final month = monthMap[match.group(2)] ?? 1;
+            final day = int.parse(match.group(3)!);
+            final year = int.parse(match.group(4)!);
+            final hour = int.parse(match.group(5)!);
+            final minute = int.parse(match.group(6)!);
+            final second = int.parse(match.group(7)!);
+
+            return DateTime(year, month, day, hour, minute, second);
+          }
+        }
+      } catch (e) {
+        print('Error parsing date with GMT format: $e');
+      }
+    }
+
+    return DateTime.now();
+  }
+
   factory VisitorModel.fromJson(Map<String, dynamic> json) {
     return VisitorModel(
       id: json['_id'] ?? '',
@@ -53,9 +104,7 @@ class VisitorModel {
       landlordId: json['landlordId'] != null && json['landlordId'] is Map<String, dynamic>
           ? LandlordInfo.fromJson(json['landlordId'])
           : null,
-      visitDate: json['visitDate'] != null
-          ? DateTime.tryParse(json['visitDate']) ?? DateTime.now()
-          : DateTime.now(),
+      visitDate: _parseVisitDate(json['visitDate']),
       status: json['status'] ?? 'pending',
       notes: json['notes'] ?? '',
       createdAt: json['createdAt'] != null

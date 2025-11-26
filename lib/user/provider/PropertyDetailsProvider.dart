@@ -81,20 +81,27 @@ class PropertyDetailsProvider extends ChangeNotifier {
         throw Exception('Authentication token not found');
       }
 
+      final Map<String, dynamic> bodyData = {
+        'propertyId': propertyId,
+        'visitDate': visitDate.toIso8601String(),
+        'notes': notes,
+        'contactNumber': contactNumber,
+      };
+
+      // 🔥 Print the body before sending to API
+      print("📌 API Body → ${json.encode(bodyData)}");
+
       final response = await http.post(
         Uri.parse('$base_url/api/visits'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: json.encode({
-          'propertyId': propertyId,
-          'visitDate': visitDate.toIso8601String(),
-          'notes': notes,
-          'contactNumber': contactNumber,
-        }),
+        body: json.encode(bodyData),
       );
 
+      print("🔵 API Response Status: ${response.statusCode}");
+      print("🔵 API Response Body: ${response.body}"); // Optional print response too
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -114,6 +121,7 @@ class PropertyDetailsProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
 
   void clearError() {
     _error = null;

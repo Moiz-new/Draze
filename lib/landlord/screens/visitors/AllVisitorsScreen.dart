@@ -601,8 +601,21 @@ class ModernVisitorCard extends StatelessWidget {
       final now = DateTime.now();
       final visitDate = visitor.visitDate;
 
-      // Check if visit date is in the past
-      return visitDate.isBefore(now);
+      // Compare dates without time to check if it's the same day
+      final today = DateTime(now.year, now.month, now.day);
+      final visitDay = DateTime(visitDate.year, visitDate.month, visitDate.day);
+
+      // If visit is today or in the future, it hasn't passed
+      if (visitDay.isAfter(today) || visitDay.isAtSameMomentAs(today)) {
+        // If it's today, check if the time has passed
+        if (visitDay.isAtSameMomentAs(today)) {
+          return visitDate.isBefore(now);
+        }
+        return false;
+      }
+
+      // Visit date is in the past
+      return true;
     } catch (e) {
       debugPrint('Error checking visit date: $e');
       return false;
@@ -616,12 +629,15 @@ class ModernVisitorCard extends StatelessWidget {
 
   String _formatVisitDate() {
     try {
-      return DateFormat('MMM dd, yyyy • hh:mm a').format(visitor.visitDate);
+      // Format: "Wed, Nov 27, 2025 at 2:30 PM"
+      return DateFormat('EEE, MMM dd, yyyy \'at\' hh:mm a').format(visitor.visitDate);
     } catch (e) {
       debugPrint('Error formatting date: $e');
       return 'Date not available';
     }
   }
+
+
 
   void _showCompleteDialog(BuildContext context) {
     showDialog(

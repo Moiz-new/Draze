@@ -43,10 +43,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.primary,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20.sp),
-        onPressed: () => Navigator.pop(context),
-      ),
+
       title: Text(
         'My Bookings',
         style: TextStyle(

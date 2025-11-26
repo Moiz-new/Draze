@@ -62,18 +62,18 @@ class AllVisitorsProvider extends ChangeNotifier {
 
       final response = await http
           .get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      )
+            uri,
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       print("AllVisitors${response.body}");
 
@@ -95,20 +95,27 @@ class AllVisitorsProvider extends ChangeNotifier {
                 visitsData
                     .where(
                       (item) => item != null && item is Map<String, dynamic>,
-                )
+                    )
                     .map((visitor) {
-                  try {
-                    return VisitorModel.fromJson(
-                      visitor as Map<String, dynamic>,
-                    );
-                  } catch (e) {
-                    debugPrint('Error parsing visitor: $e');
-                    return null;
-                  }
-                })
+                      try {
+                        final visitorModel = VisitorModel.fromJson(
+                          visitor as Map<String, dynamic>,
+                        );
+                        debugPrint(
+                          'Parsed visitor: ${visitorModel.id}, Visit Date: ${visitorModel.visitDate}',
+                        );
+                        return visitorModel;
+                      } catch (e) {
+                        debugPrint('Error parsing visitor: $e');
+                        debugPrint('Visitor data: $visitor');
+                        return null;
+                      }
+                    })
                     .where((visitor) => visitor != null)
                     .cast<VisitorModel>()
                     .toList();
+
+            debugPrint('Total visitors parsed: ${_visitors.length}');
           } else {
             _visitors = [];
           }
@@ -123,7 +130,7 @@ class AllVisitorsProvider extends ChangeNotifier {
         _error = 'API endpoint not found';
       } else {
         _error =
-        'Failed to fetch visitors. Status code: ${response.statusCode}';
+            'Failed to fetch visitors. Status code: ${response.statusCode}';
       }
     } catch (e) {
       _error = 'Error: ${e.toString()}';
@@ -167,19 +174,19 @@ class AllVisitorsProvider extends ChangeNotifier {
 
       final response = await http
           .put(
-        Uri.parse('$base_url/api/visits/$visitorId/confirm'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(body),
-      )
+            Uri.parse('$base_url/api/visits/$visitorId/confirm'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode(body),
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       debugPrint('Confirm Response Body: ${response.body}');
       debugPrint('Confirm Status Code: ${response.statusCode}');
@@ -265,26 +272,24 @@ class AllVisitorsProvider extends ChangeNotifier {
       }
 
       if (feedbackComment != null && feedbackComment.isNotEmpty) {
-        body['feedback'] = {
-          'comment': feedbackComment,
-        };
+        body['feedback'] = {'comment': feedbackComment};
       }
 
       final response = await http
           .put(
-        Uri.parse('$base_url/api/visits/$visitorId/complete'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(body),
-      )
+            Uri.parse('$base_url/api/visits/$visitorId/complete'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode(body),
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       debugPrint('Complete Response Body: ${response.body}');
       debugPrint('Complete Status Code: ${response.statusCode}');
@@ -377,19 +382,19 @@ class AllVisitorsProvider extends ChangeNotifier {
 
       final response = await http
           .put(
-        Uri.parse('$base_url/api/visits/$visitorId/cancel'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(body),
-      )
+            Uri.parse('$base_url/api/visits/$visitorId/cancel'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode(body),
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       debugPrint('Cancel Response Body: ${response.body}');
       debugPrint('Cancel Status Code: ${response.statusCode}');
@@ -462,18 +467,18 @@ class AllVisitorsProvider extends ChangeNotifier {
 
       final response = await http
           .delete(
-        Uri.parse('$base_url/api/visits/$visitorId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      )
+            Uri.parse('$base_url/api/visits/$visitorId'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       if (response.statusCode == 200) {
         final decodedData = json.decode(response.body);
