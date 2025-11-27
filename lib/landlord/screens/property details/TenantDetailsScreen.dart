@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:draze/core/constants/appColors.dart';
 import 'package:draze/core/constants/appSizes.dart';
@@ -50,12 +51,11 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator(strokeWidth: 1.6))
-              : _error != null
-              ? _buildErrorState()
-              : _buildContent(),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(strokeWidth: 1.6.w))
+          : _error != null
+          ? _buildErrorState()
+          : _buildContent(),
     );
   }
 
@@ -64,36 +64,37 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-          const SizedBox(height: 16),
+          Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+          SizedBox(height: 16.h),
           Text(
             'Error loading details',
             style: TextStyle(
-              fontSize: AppSizes.mediumText(context),
+              fontSize: 16.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.error,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Text(
               _error ?? 'Unknown error',
               style: TextStyle(
-                fontSize: AppSizes.smallText(context),
+                fontSize: 14.sp,
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           ElevatedButton.icon(
             onPressed: _loadTenantDetails,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            icon: Icon(Icons.refresh, size: 20.sp),
+            label: Text('Retry', style: TextStyle(fontSize: 14.sp)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             ),
           ),
         ],
@@ -115,7 +116,7 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
               _buildFamilyInfoSection(),
               _buildAccommodationSection(),
               _buildElectricitySection(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
             ],
           ),
         ),
@@ -125,11 +126,11 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 200.h,
       pinned: true,
       backgroundColor: AppColors.primary,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.sp),
         onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: FlexibleSpaceBar(
@@ -145,48 +146,46 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
+                SizedBox(height: 40.h),
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 100.w,
+                  height: 100.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
-                    border: Border.all(color: Colors.white, width: 3),
+                    border: Border.all(color: Colors.white, width: 3.w),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        blurRadius: 10.r,
+                        offset: Offset(0, 4.h),
                       ),
                     ],
                   ),
-                  child:
-                      _tenantDetails!.photo != null
-                          ? ClipOval(
-                            child: Image.network(
-                              _tenantDetails!.photo!,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) => const Icon(
-                                    Icons.person,
-                                    size: 50,
-                                    color: AppColors.primary,
-                                  ),
-                            ),
-                          )
-                          : const Icon(
-                            Icons.person,
-                            size: 50,
-                            color: AppColors.primary,
-                          ),
+                  child: _tenantDetails!.photo != null
+                      ? ClipOval(
+                    child: Image.network(
+                      _tenantDetails!.photo!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.person,
+                        size: 50.sp,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                      : Icon(
+                    Icons.person,
+                    size: 50.sp,
+                    color: AppColors.primary,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Text(
                   _tenantDetails!.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 24.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -194,7 +193,7 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
                   _tenantDetails!.tenantId,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
+                    fontSize: 14.sp,
                   ),
                 ),
               ],
@@ -207,33 +206,33 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
 
   Widget _buildProfileSection() {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
       child: Column(
         children: [
           _buildInfoRow(Icons.email_outlined, 'Email', _tenantDetails!.email),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(Icons.phone_outlined, 'Mobile', _tenantDetails!.mobile),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(Icons.work_outline, 'Occupation', _tenantDetails!.work),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.cake_outlined,
             'Date of Birth',
             _formatDate(_tenantDetails!.dob),
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.favorite_border,
             'Marital Status',
@@ -246,37 +245,37 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
 
   Widget _buildPersonalInfoSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Personal Information',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 18.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildInfoRow(
             Icons.credit_card_outlined,
             'Aadhaar',
             _tenantDetails!.aadhaar,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.home_outlined,
             'Permanent Address',
@@ -289,49 +288,49 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
 
   Widget _buildFamilyInfoSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Family Information',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 18.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildInfoRow(
             Icons.person_outline,
             'Father\'s Name',
             _tenantDetails!.fatherName,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.phone_outlined,
             'Father\'s Mobile',
             _tenantDetails!.fatherMobile,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.person_outline,
             'Mother\'s Name',
             _tenantDetails!.motherName,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.phone_outlined,
             'Mother\'s Mobile',
@@ -348,16 +347,16 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
     final acc = _tenantDetails!.accommodations.first;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -366,91 +365,91 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Accommodation Details',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 6.h,
                 ),
                 decoration: BoxDecoration(
                   color: acc.isActive ? AppColors.success : AppColors.error,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
                   acc.isActive ? 'Active' : 'Inactive',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildInfoRow(Icons.apartment_outlined, 'Property', acc.propertyName),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(Icons.meeting_room_outlined, 'Room ID', acc.roomId),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.calendar_today_outlined,
             'Move In Date',
             _formatDate(acc.moveInDate),
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.currency_rupee,
             'Monthly Rent',
             '₹${acc.rentAmount.toStringAsFixed(0)}',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.account_balance_wallet_outlined,
             'Security Deposit',
             '₹${acc.securityDeposit.toStringAsFixed(0)}',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.pending_actions_outlined,
             'Pending Dues',
             '₹${acc.pendingDues.toStringAsFixed(0)}',
             valueColor:
-                acc.pendingDues > 0 ? AppColors.error : AppColors.success,
+            acc.pendingDues > 0 ? AppColors.error : AppColors.success,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.event_repeat,
             'Rental Frequency',
             acc.rentalFrequency,
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.calendar_month,
             'Rent Date',
             'Day ${acc.rentOnDate}',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.schedule_outlined,
             'Notice Period',
             '${acc.noticePeriod} days',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.description_outlined,
             'Agreement Period',
             '${acc.agreementPeriod} ${acc.agreementPeriodType}',
           ),
           if (acc.remarks.isNotEmpty) ...[
-            const Divider(height: 24),
+            Divider(height: 24.h),
             _buildInfoRow(Icons.notes_outlined, 'Remarks', acc.remarks),
           ],
         ],
@@ -464,16 +463,16 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
     final electricity = _tenantDetails!.accommodations.first.electricity;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -483,48 +482,48 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
                   color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bolt,
                   color: AppColors.warning,
-                  size: 20,
+                  size: 20.sp,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: 12.w),
+              Text(
                 'Electricity Details',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildInfoRow(
             Icons.attach_money,
             'Rate per Unit',
             '₹${electricity.perUnit.toStringAsFixed(0)}',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.speed,
             'Initial Reading',
             '${electricity.initialReading} units',
           ),
-          const Divider(height: 24),
+          Divider(height: 24.h),
           _buildInfoRow(
             Icons.calendar_today,
             'Reading Date',
             _formatDate(electricity.initialReadingDate),
           ),
           if (electricity.finalReading != null) ...[
-            const Divider(height: 24),
+            Divider(height: 24.h),
             _buildInfoRow(
               Icons.speed,
               'Final Reading',
@@ -537,40 +536,40 @@ class _TenantDetailsScreenState extends State<TenantDetailsScreen> {
   }
 
   Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
+      IconData icon,
+      String label,
+      String value, {
+        Color? valueColor,
+      }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8.w),
           decoration: BoxDecoration(
             color: AppColors.secondary,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
+          child: Icon(icon, size: 18.sp, color: AppColors.primary),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4.h),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   color: valueColor ?? AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -648,10 +647,9 @@ class TenantDetails {
       motherMobile: json['motherMobile'] ?? 'N/A',
       photo: json['photo'],
       tenantId: json['tenantId'] ?? '',
-      accommodations:
-          (json['accommodations'] as List?)
-              ?.map((acc) => Accommodation.fromJson(acc))
-              .toList() ??
+      accommodations: (json['accommodations'] as List?)
+          ?.map((acc) => Accommodation.fromJson(acc))
+          .toList() ??
           [],
     );
   }

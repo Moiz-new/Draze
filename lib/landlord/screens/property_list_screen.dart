@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:draze/core/constants/appColors.dart';
 import 'package:draze/landlord/screens/property%20details/property_details_screens.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:draze/landlord/screens/property_screen.dart';
@@ -39,7 +40,6 @@ class _PropertyListScreenState extends State<PropertyListScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Auto-refresh when screen becomes visible
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshData();
     });
@@ -53,7 +53,6 @@ class _PropertyListScreenState extends State<PropertyListScreen>
     super.dispose();
   }
 
-  // Refresh data method
   Future<void> _refreshData() async {
     final propertyProvider = context.read<AllPropertyListProvider>();
     await propertyProvider.loadProperties();
@@ -62,7 +61,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
 
   void _scrollListener() {
     if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+        _scrollController.position.maxScrollExtent - 200.h) {
       _loadMoreProperties();
     }
   }
@@ -117,21 +116,25 @@ class _PropertyListScreenState extends State<PropertyListScreen>
   }
 
   void _showDeleteConfirmation(
-    BuildContext context,
-    AllPropertyListModel property,
-  ) {
+      BuildContext context,
+      AllPropertyListModel property,
+      ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Delete Property'),
+          title: Text(
+            'Delete Property',
+            style: TextStyle(fontSize: 18.sp),
+          ),
           content: Text(
             'Are you sure you want to delete "${property.name}"? This action cannot be undone.',
+            style: TextStyle(fontSize: 14.sp),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
             ),
             TextButton(
               onPressed: () async {
@@ -139,7 +142,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                 await _deleteProperty(property);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
+              child: Text('Delete', style: TextStyle(fontSize: 14.sp)),
             ),
           ],
         );
@@ -150,21 +153,23 @@ class _PropertyListScreenState extends State<PropertyListScreen>
   Future<void> _deleteProperty(AllPropertyListModel property) async {
     final propertyProvider = context.read<AllPropertyListProvider>();
 
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return const Center(
+        return Center(
           child: Card(
             child: Padding(
-              padding: EdgeInsets.all(20.0),
+              padding: EdgeInsets.all(20.w),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Deleting property...'),
+                  CircularProgressIndicator(strokeWidth: 3.w),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Deleting property...',
+                    style: TextStyle(fontSize: 14.sp),
+                  ),
                 ],
               ),
             ),
@@ -175,20 +180,20 @@ class _PropertyListScreenState extends State<PropertyListScreen>
 
     final success = await propertyProvider.deleteProperty(property.id);
 
-    // Close loading dialog
     if (mounted) {
       Navigator.of(context).pop();
     }
 
     if (success) {
-      // Reset pagination after deletion
       _resetPagination();
 
-      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${property.name} deleted successfully'),
+            content: Text(
+              '${property.name} deleted successfully',
+              style: TextStyle(fontSize: 14.sp),
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
@@ -196,12 +201,12 @@ class _PropertyListScreenState extends State<PropertyListScreen>
         );
       }
     } else {
-      // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               propertyProvider.error ?? 'Failed to delete property',
+              style: TextStyle(fontSize: 14.sp),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
@@ -218,12 +223,12 @@ class _PropertyListScreenState extends State<PropertyListScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Properties',
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.white,
-            fontSize: 25,
+            fontSize: 25.sp,
           ),
         ),
         backgroundColor: AppColors.primary,
@@ -231,7 +236,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, size: 24.sp),
             onPressed: _refreshData,
             tooltip: 'Refresh',
           ),
@@ -248,7 +253,9 @@ class _PropertyListScreenState extends State<PropertyListScreen>
           }
 
           if (propertyProvider.isLoading && _displayedProperties.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(strokeWidth: 3.w),
+            );
           }
 
           if (propertyProvider.error != null) {
@@ -256,30 +263,42 @@ class _PropertyListScreenState extends State<PropertyListScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-                  const SizedBox(height: 16),
+                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red[400]),
+                  SizedBox(height: 16.h),
                   Text(
                     'Error loading properties',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[700],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    propertyProvider.error!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600]),
+                  SizedBox(height: 8.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32.w),
+                    child: Text(
+                      propertyProvider.error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14.sp,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   ElevatedButton.icon(
                     onPressed: () {
                       propertyProvider.clearError();
                       _refreshData();
                     },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    icon: Icon(Icons.refresh, size: 18.sp),
+                    label: Text('Retry', style: TextStyle(fontSize: 14.sp)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.w,
+                        vertical: 12.h,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -293,34 +312,40 @@ class _PropertyListScreenState extends State<PropertyListScreen>
               children: [
                 // Search Bar
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16.w),
                   color: Colors.white,
                   child: TextField(
                     controller: _searchController,
+                    style: TextStyle(fontSize: 14.sp),
                     decoration: InputDecoration(
                       hintText: 'Search properties...',
-                      prefixIcon: const Icon(Icons.search),
+                      hintStyle: TextStyle(fontSize: 14.sp),
+                      prefixIcon: Icon(Icons.search, size: 20.sp),
                       suffixIcon:
-                          _searchController.text.isNotEmpty
-                              ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  propertyProvider.updateSearchQuery('');
-                                  _resetPagination();
-                                },
-                              )
-                              : null,
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                        icon: Icon(Icons.clear, size: 20.sp),
+                        onPressed: () {
+                          _searchController.clear();
+                          propertyProvider.updateSearchQuery('');
+                          _resetPagination();
+                        },
+                      )
+                          : null,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(color: Colors.blue[700]!),
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                     ),
                     onChanged: (value) {
                       propertyProvider.updateSearchQuery(value);
@@ -333,9 +358,9 @@ class _PropertyListScreenState extends State<PropertyListScreen>
 
                 // Results Info
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
                   ),
                   color: Colors.white,
                   child: Row(
@@ -346,6 +371,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
+                          fontSize: 13.sp,
                         ),
                       ),
                       if (_displayedProperties.isNotEmpty)
@@ -354,6 +380,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
+                            fontSize: 13.sp,
                           ),
                         ),
                     ],
@@ -363,81 +390,82 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                 // Properties List
                 Expanded(
                   child:
-                      _displayedProperties.isEmpty
-                          ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
+                  _displayedProperties.isEmpty
+                      ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.5,
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.home_outlined,
-                                        size: 64,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'No properties found',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        propertyProvider.searchQuery.isNotEmpty
-                                            ? 'Try adjusting your search terms'
-                                            : 'No properties available at the moment',
-                                        style: TextStyle(
-                                          color: Colors.grey[500],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              Icon(
+                                Icons.home_outlined,
+                                size: 64.sp,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16.h),
+                              Text(
+                                'No properties found',
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                propertyProvider.searchQuery.isNotEmpty
+                                    ? 'Try adjusting your search terms'
+                                    : 'No properties available at the moment',
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 14.sp,
                                 ),
                               ),
                             ],
-                          )
-                          : ListView.builder(
-                            controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
-                            itemCount:
-                                _displayedProperties.length +
-                                (_hasMoreData ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index == _displayedProperties.length) {
-                                return Container(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Center(
-                                    child:
-                                        _isLoadingMore
-                                            ? const CircularProgressIndicator()
-                                            : const SizedBox.shrink(),
-                                  ),
-                                );
-                              }
-
-                              final property = _displayedProperties[index];
-                              return PropertyCard(
-                                property: property,
-                                onDelete:
-                                    () => _showDeleteConfirmation(
-                                      context,
-                                      property,
-                                    ),
-                                onEdit: () {
-                                  // Refresh the list after edit
-                                  _refreshData();
-                                },
-                              );
-                            },
                           ),
+                        ),
+                      ),
+                    ],
+                  )
+                      : ListView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(16.w),
+                    itemCount:
+                    _displayedProperties.length +
+                        (_hasMoreData ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _displayedProperties.length) {
+                        return Container(
+                          padding: EdgeInsets.all(16.w),
+                          child: Center(
+                            child:
+                            _isLoadingMore
+                                ? CircularProgressIndicator(
+                              strokeWidth: 3.w,
+                            )
+                                : const SizedBox.shrink(),
+                          ),
+                        );
+                      }
+
+                      final property = _displayedProperties[index];
+                      return PropertyCard(
+                        property: property,
+                        onDelete:
+                            () => _showDeleteConfirmation(
+                          context,
+                          property,
+                        ),
+                        onEdit: () {
+                          _refreshData();
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -453,7 +481,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
           }
         },
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: Colors.white, size: 24.sp),
       ),
     );
   }
@@ -474,10 +502,10 @@ class PropertyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -494,47 +522,47 @@ class PropertyCard extends StatelessWidget {
             MaterialPageRoute(
               builder:
                   (context) => PropertyDetailsScreen(
-                    propertyId: property.id,
-                    propertyName: property.name,
-                  ),
+                propertyId: property.id,
+                propertyName: property.name,
+              ),
             ),
           );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Property Image
               Container(
-                width: 100,
-                height: 100,
+                width: 100.w,
+                height: 100.h,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   color: Colors.grey[200],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   child:
-                      property.images.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl: property.images.first,
-                            fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            errorWidget:
-                                (context, url, error) =>
-                                    _buildPlaceholderImage(),
-                          )
-                          : _buildPlaceholderImage(),
+                  property.images.isNotEmpty
+                      ? CachedNetworkImage(
+                    imageUrl: property.images.first,
+                    fit: BoxFit.cover,
+                    placeholder:
+                        (context, url) => Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.w,
+                      ),
+                    ),
+                    errorWidget:
+                        (context, url, error) =>
+                        _buildPlaceholderImage(),
+                  )
+                      : _buildPlaceholderImage(),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
 
               // Property Details
               Expanded(
@@ -547,8 +575,8 @@ class PropertyCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             property.name,
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
@@ -557,70 +585,70 @@ class PropertyCard extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
                           ),
                           decoration: BoxDecoration(
                             color:
-                                property.isActive
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
+                            property.isActive
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
                             property.isActive ? 'Active' : 'Inactive',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
                               color:
-                                  property.isActive
-                                      ? Colors.green[700]
-                                      : Colors.red[700],
+                              property.isActive
+                                  ? Colors.green[700]
+                                  : Colors.red[700],
                             ),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4.h),
 
                     // Property Type
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
                         property.type,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
                           color: Colors.blue[700],
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
 
                     // Address
                     Row(
                       children: [
                         Icon(
                           Icons.location_on_outlined,
-                          size: 16,
+                          size: 16.sp,
                           color: Colors.grey[600],
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4.w),
                         Expanded(
                           child: Text(
                             '${property.address}, ${property.city}',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: Colors.grey[600],
                             ),
                             maxLines: 1,
@@ -630,7 +658,7 @@ class PropertyCard extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
 
                     // Property Stats
                     Row(
@@ -639,7 +667,7 @@ class PropertyCard extends StatelessWidget {
                           Icons.meeting_room_outlined,
                           '${property.totalRooms} Rooms',
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         _buildStatChip(
                           Icons.bed_outlined,
                           '${property.totalBeds} Beds',
@@ -647,7 +675,7 @@ class PropertyCard extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4.h),
                   ],
                 ),
               ),
@@ -658,10 +686,10 @@ class PropertyCard extends StatelessWidget {
                 children: [
                   // Edit Button
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.edit_outlined,
                       color: Colors.blue,
-                      size: 22,
+                      size: 22.sp,
                     ),
                     onPressed: () async {
                       final result = await Navigator.push(
@@ -669,27 +697,36 @@ class PropertyCard extends StatelessWidget {
                         MaterialPageRoute(
                           builder:
                               (context) => EditPropertyScreen(
-                                propertyData: property.toJson(),
-                              ),
+                            propertyData: property.toJson(),
+                          ),
                         ),
                       );
 
-                      // Refresh the list if property was updated
                       if (result == true && onEdit != null) {
                         onEdit!();
                       }
                     },
                     tooltip: 'Edit Property',
+                    padding: EdgeInsets.all(8.w),
+                    constraints: BoxConstraints(
+                      minWidth: 36.w,
+                      minHeight: 36.h,
+                    ),
                   ),
                   // Delete Button
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.delete_outline,
                       color: Colors.red,
-                      size: 22,
+                      size: 22.sp,
                     ),
                     onPressed: onDelete,
                     tooltip: 'Delete Property',
+                    padding: EdgeInsets.all(8.w),
+                    constraints: BoxConstraints(
+                      minWidth: 36.w,
+                      minHeight: 36.h,
+                    ),
                   ),
                 ],
               ),
@@ -704,28 +741,32 @@ class PropertyCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Icon(Icons.home_outlined, size: 40, color: Colors.grey[400]),
+      child: Icon(
+        Icons.home_outlined,
+        size: 40.sp,
+        color: Colors.grey[400],
+      ),
     );
   }
 
   Widget _buildStatChip(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(4.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.grey[600]),
-          const SizedBox(width: 4),
+          Icon(icon, size: 12.sp, color: Colors.grey[600]),
+          SizedBox(width: 4.w),
           Text(
             text,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 11.sp,
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
