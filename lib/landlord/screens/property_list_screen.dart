@@ -116,17 +116,14 @@ class _PropertyListScreenState extends State<PropertyListScreen>
   }
 
   void _showDeleteConfirmation(
-      BuildContext context,
-      AllPropertyListModel property,
-      ) {
+    BuildContext context,
+    AllPropertyListModel property,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text(
-            'Delete Property',
-            style: TextStyle(fontSize: 18.sp),
-          ),
+          title: Text('Delete Property', style: TextStyle(fontSize: 18.sp)),
           content: Text(
             'Are you sure you want to delete "${property.name}"? This action cannot be undone.',
             style: TextStyle(fontSize: 14.sp),
@@ -253,9 +250,7 @@ class _PropertyListScreenState extends State<PropertyListScreen>
           }
 
           if (propertyProvider.isLoading && _displayedProperties.isEmpty) {
-            return Center(
-              child: CircularProgressIndicator(strokeWidth: 3.w),
-            );
+            return Center(child: CircularProgressIndicator(strokeWidth: 3.w));
           }
 
           if (propertyProvider.error != null) {
@@ -263,7 +258,11 @@ class _PropertyListScreenState extends State<PropertyListScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red[400]),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64.sp,
+                    color: Colors.red[400],
+                  ),
                   SizedBox(height: 16.h),
                   Text(
                     'Error loading properties',
@@ -322,16 +321,16 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                       hintStyle: TextStyle(fontSize: 14.sp),
                       prefixIcon: Icon(Icons.search, size: 20.sp),
                       suffixIcon:
-                      _searchController.text.isNotEmpty
-                          ? IconButton(
-                        icon: Icon(Icons.clear, size: 20.sp),
-                        onPressed: () {
-                          _searchController.clear();
-                          propertyProvider.updateSearchQuery('');
-                          _resetPagination();
-                        },
-                      )
-                          : null,
+                          _searchController.text.isNotEmpty
+                              ? IconButton(
+                                icon: Icon(Icons.clear, size: 20.sp),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  propertyProvider.updateSearchQuery('');
+                                  _resetPagination();
+                                },
+                              )
+                              : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -390,82 +389,83 @@ class _PropertyListScreenState extends State<PropertyListScreen>
                 // Properties List
                 Expanded(
                   child:
-                  _displayedProperties.isEmpty
-                      ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.5,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      _displayedProperties.isEmpty
+                          ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             children: [
-                              Icon(
-                                Icons.home_outlined,
-                                size: 64.sp,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(height: 16.h),
-                              Text(
-                                'No properties found',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                propertyProvider.searchQuery.isNotEmpty
-                                    ? 'Try adjusting your search terms'
-                                    : 'No properties available at the moment',
-                                style: TextStyle(
-                                  color: Colors.grey[500],
-                                  fontSize: 14.sp,
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.5,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.home_outlined,
+                                        size: 64.sp,
+                                        color: Colors.grey[400],
+                                      ),
+                                      SizedBox(height: 16.h),
+                                      Text(
+                                        'No properties found',
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      Text(
+                                        propertyProvider.searchQuery.isNotEmpty
+                                            ? 'Try adjusting your search terms'
+                                            : 'No properties available at the moment',
+                                        style: TextStyle(
+                                          color: Colors.grey[500],
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                      : ListView.builder(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.all(16.w),
-                    itemCount:
-                    _displayedProperties.length +
-                        (_hasMoreData ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _displayedProperties.length) {
-                        return Container(
-                          padding: EdgeInsets.all(16.w),
-                          child: Center(
-                            child:
-                            _isLoadingMore
-                                ? CircularProgressIndicator(
-                              strokeWidth: 3.w,
-                            )
-                                : const SizedBox.shrink(),
-                          ),
-                        );
-                      }
+                          )
+                          : ListView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.all(16.w),
+                            itemCount:
+                                _displayedProperties.length +
+                                (_hasMoreData ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == _displayedProperties.length) {
+                                return Container(
+                                  padding: EdgeInsets.all(16.w),
+                                  child: Center(
+                                    child:
+                                        _isLoadingMore
+                                            ? CircularProgressIndicator(
+                                              strokeWidth: 3.w,
+                                            )
+                                            : const SizedBox.shrink(),
+                                  ),
+                                );
+                              }
 
-                      final property = _displayedProperties[index];
-                      return PropertyCard(
-                        property: property,
-                        onDelete:
-                            () => _showDeleteConfirmation(
-                          context,
-                          property,
-                        ),
-                        onEdit: () {
-                          _refreshData();
-                        },
-                      );
-                    },
-                  ),
+                              final property = _displayedProperties[index];
+                              return PropertyCard(
+                                property: property,
+                                onDelete:
+                                    () => _showDeleteConfirmation(
+                                      context,
+                                      property,
+                                    ),
+                                onEdit: () {
+                                  _refreshData();
+                                },
+                              );
+                            },
+                          ),
                 ),
               ],
             ),
@@ -522,9 +522,9 @@ class PropertyCard extends StatelessWidget {
             MaterialPageRoute(
               builder:
                   (context) => PropertyDetailsScreen(
-                propertyId: property.id,
-                propertyName: property.name,
-              ),
+                    propertyId: property.id,
+                    propertyName: property.name,
+                  ),
             ),
           );
         },
@@ -545,21 +545,21 @@ class PropertyCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
                   child:
-                  property.images.isNotEmpty
-                      ? CachedNetworkImage(
-                    imageUrl: property.images.first,
-                    fit: BoxFit.cover,
-                    placeholder:
-                        (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.w,
-                      ),
-                    ),
-                    errorWidget:
-                        (context, url, error) =>
-                        _buildPlaceholderImage(),
-                  )
-                      : _buildPlaceholderImage(),
+                      property.images.isNotEmpty
+                          ? CachedNetworkImage(
+                            imageUrl: property.images.first,
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.w,
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) =>
+                                    _buildPlaceholderImage(),
+                          )
+                          : _buildPlaceholderImage(),
                 ),
               ),
               SizedBox(width: 16.w),
@@ -591,9 +591,9 @@ class PropertyCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color:
-                            property.isActive
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.red.withOpacity(0.1),
+                                property.isActive
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.red.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
@@ -602,9 +602,9 @@ class PropertyCard extends StatelessWidget {
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
                               color:
-                              property.isActive
-                                  ? Colors.green[700]
-                                  : Colors.red[700],
+                                  property.isActive
+                                      ? Colors.green[700]
+                                      : Colors.red[700],
                             ),
                           ),
                         ),
@@ -697,8 +697,8 @@ class PropertyCard extends StatelessWidget {
                         MaterialPageRoute(
                           builder:
                               (context) => EditPropertyScreen(
-                            propertyData: property.toJson(),
-                          ),
+                                propertyData: property.toJson(),
+                              ),
                         ),
                       );
 
@@ -743,11 +743,7 @@ class PropertyCard extends StatelessWidget {
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Icon(
-        Icons.home_outlined,
-        size: 40.sp,
-        color: Colors.grey[400],
-      ),
+      child: Icon(Icons.home_outlined, size: 40.sp, color: Colors.grey[400]),
     );
   }
 
